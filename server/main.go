@@ -20,8 +20,8 @@ type Room struct {
 }
 
 var (
-	players []Player
-	rooms   []Room
+	players []*Player
+	rooms   []*Room
 )
 
 func main() {
@@ -33,7 +33,8 @@ func main() {
 	}
 	defer listener.Close()
 
-	fmt.Println("Server is listening on port 8080\n")
+	fmt.Println("Server is listening on port 8080")
+	fmt.Println()
 
 	connectedPlayers := 0
 	for {
@@ -46,11 +47,11 @@ func main() {
 
 		// every second player connecting join existing room
 		if connectedPlayers%2 == 0 {
-			awaitingRoom, found := lo.Find(rooms, func(r Room) bool {
+			awaitingRoom, found := lo.Find(rooms, func(r *Room) bool {
 				return r.Player1 != nil && r.Player2 == nil
 			})
 			if found {
-				go handleConnection(conn, &awaitingRoom)
+				go handleConnection(conn, awaitingRoom)
 			} else {
 				fmt.Println("Couldn't find free room")
 			}
@@ -66,15 +67,15 @@ func handleConnection(conn net.Conn, room *Room) {
 	connectedPlayerId := uuid.New()
 	if room == nil {
 		newRoom := createNewRoom()
-		newPlayer := Player{Id: connectedPlayerId, RoomId: newRoom.Id}
+		newPlayer := &Player{Id: connectedPlayerId, RoomId: newRoom.Id}
 		players = append(players, newPlayer)
-		newRoom.Player1 = &newPlayer
+		newRoom.Player1 = newPlayer
 		fmt.Printf("Player [%s] created the room [%s]\n", newPlayer.Id, newRoom.Id)
 	} else {
 		// room already exists
-		newPlayer := Player{Id: connectedPlayerId, RoomId: room.Id}
+		newPlayer := &Player{Id: connectedPlayerId, RoomId: room.Id}
 		players = append(players, newPlayer)
-		room.Player2 = &newPlayer
+		room.Player2 = newPlayer
 		fmt.Printf("Player [%s] joined the room [%s]\n", newPlayer.Id, room.Id)
 	}
 
@@ -86,11 +87,10 @@ func handleConnection(conn net.Conn, room *Room) {
 	}
 
 	fmt.Println("Received data:", string(buffer))
-	fmt.Printf("From player: %s\n", connectedPlayerId)
 }
 
 func createNewRoom() *Room {
-	newRoom := Room{Id: uuid.New()}
+	newRoom := &Room{Id: uuid.New()}
 	rooms = append(rooms, newRoom)
-	return &newRoom
+	return newRoom
 }
