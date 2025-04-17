@@ -15,9 +15,11 @@ install: build
 clean:
 	@rm -rf $(BIN_DIR)/*
 
+# run server
 server:
 	$(BIN_DIR)/chat-server
 
+# run client
 client:
 	$(BIN_DIR)/chat-client
 
